@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Created-By: Stephan and Viktor
+Main-Class: at.fhtw.fprog.Main
