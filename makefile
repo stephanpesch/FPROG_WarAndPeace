@@ -4,7 +4,9 @@ all: main
 	mkdir -p out
 
 main: .outputFolder
-	javac -d ./out/ ./src/Main.java
+	cp src/manifest.txt out/manifest.txt
+	javac -d ./out/ ./src/at/fhtw/fprog/Main.java
+	cd out; jar -cvfm ../out.jar manifest.txt at/fhtw/fprog/*.class
 	
 clean:
-	rm -rf ./out/
+	rm -rf ./out/ out.jar
