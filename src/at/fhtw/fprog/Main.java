@@ -1,7 +1,8 @@
+package at.fhtw.fprog;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -10,9 +11,18 @@ import java.util.stream.Stream;
 public class Main {
 
     public static void main(String[] args) {
-        var book = readFile("in/war_and_peace.txt");
-        var warTerms = readFile("in/war_terms.txt");
-        var peaceTerms = readFile("in/peace_terms.txt");
+    	String bookPath = "in/war_and_peace.txt";
+    	String warTermsPath = "in/war_terms.txt";
+    	String peaceTermsPath = "in/peace_terms.txt";
+    	if (args.length == 3) {
+    		bookPath = args[0];
+    		warTermsPath = args[1];
+    		peaceTermsPath = args[2];
+    		
+    	}
+        var book = readFile(bookPath);
+        var warTerms = readFile(warTermsPath);
+        var peaceTerms = readFile(peaceTermsPath);
 
         if (book.isEmpty() || warTerms.isEmpty() || peaceTerms.isEmpty())
             System.out.println("Could not read files, or files are empty");
