@@ -1,4 +1,28 @@
 # War and Peace analyzer
+## Build instructions
+
+To build make sure that the JDK and make are installed, then just run the following command
+
+```bash
+make
+```
+
+## Run instructions
+
+Make sure to make the file executable like this
+```bash
+chmod +x run.sh
+```
+
+Then just execute the run.sh like this with the default files
+```bash
+./run.sh
+```
+or like this if you want to specify your own files
+```bash
+./run.sh [path to text] [path to war terms] [path to peace terms]
+```
+
 ## Instructions
 For the problem:
 
