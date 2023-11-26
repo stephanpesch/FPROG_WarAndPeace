@@ -11,29 +11,29 @@ import java.util.stream.Stream;
 public class Main {
 
     public static void main(String[] args) {
-    	String bookPath = "in/war_and_peace.txt";
-    	String warTermsPath = "in/war_terms.txt";
-    	String peaceTermsPath = "in/peace_terms.txt";
-    	if (args.length == 3) {
-    		bookPath = args[0];
-    		warTermsPath = args[1];
-    		peaceTermsPath = args[2];
-    		
-    	}
-        var book = readFile(bookPath);
-        var warTerms = readFile(warTermsPath);
-        var peaceTerms = readFile(peaceTermsPath);
+        String bookPath = "in/war_and_peace.txt";
+        String warTermsPath = "in/war_terms.txt";
+        String peaceTermsPath = "in/peace_terms.txt";
+        if (args.length == 3) {
+            bookPath = args[0];
+            warTermsPath = args[1];
+            peaceTermsPath = args[2];
+
+        }
+        List<String> book = readFile(bookPath);
+        List<String> warTerms = readFile(warTermsPath);
+        List<String> peaceTerms = readFile(peaceTermsPath);
 
         if (book.isEmpty() || warTerms.isEmpty() || peaceTerms.isEmpty())
             System.out.println("Could not read files, or files are empty");
 
-        var tokenizedBook = tokenizeBook(book);
-        var splitBook = splitIntoChapters(tokenizedBook);
+        List<String> tokenizedBook = tokenizeBook(book);
+        List<List<String>> splitBook = splitIntoChapters(tokenizedBook);
 
-        var peaceDensity = calculateDensity(tokenizedBook, peaceTerms);
-        var warDensity = calculateDensity(tokenizedBook, warTerms);
+        double peaceDensity = calculateDensity(tokenizedBook, peaceTerms);
+        double warDensity = calculateDensity(tokenizedBook, warTerms);
 
-        var chapter = new Chapter(1, peaceDensity, warDensity);
+        Chapter chapter = new Chapter(1, peaceDensity, warDensity);
         System.out.println(chapter);
 
         // tokenizedBook.forEach(System.out::println);
@@ -91,6 +91,16 @@ public class Main {
                 .toArray();
     }
 
+    /*
+    private static double calculateDensity(List<String> list, List<String> of) {
+        var distancesArray = filterAndCreateCoordinateArray(list, of);
+        return IntStream.range(0, distancesArray.length - 1)
+                .mapToDouble(i -> distancesArray[i + 1] - distancesArray[i])
+                .average()
+                .orElse(0);
+    }
+
+     */
     private static double calculateDensity(List<String> list, List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         return IntStream.range(0, distancesArray.length - 1)
