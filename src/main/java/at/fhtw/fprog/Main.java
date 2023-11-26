@@ -110,6 +110,16 @@ public class Main {
                 .toArray();
     }
 
+    static double calculateDensity(List<String> list, List<String> of) {
+        long termCount = of.stream()
+                .filter(list::contains)
+                .count();
+        long totalDistance = IntStream.range(0, list.size())
+                .filter(i -> of.contains(list.get(i)))
+                .reduce(0, (a, b) -> a + (b - a));
+        return termCount == 0 ? 0 : (double) totalDistance / termCount;
+    }
+
     static double calculateDensityTrivial(List<String> list, List<String> of) {
         long count = list.parallelStream()
                 .filter(of::contains)
@@ -117,7 +127,7 @@ public class Main {
         return list.size() / (double) count;
     }
 
-    static double calculateDensity(List<String> list, List<String> of) {
+    static double calculateDensityAll(List<String> list, List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         int length = distancesArray.length;
         return IntStream.range(0, length).parallel()
