@@ -28,16 +28,11 @@ public class Main {
         if (book.isEmpty() || warTerms.isEmpty() || peaceTerms.isEmpty())
             System.out.println("Could not read files, or files are empty");
 
-        // List<String> tokenizedBook = tokenizeBook(book);
-        // List<List<String>> splitBook = splitIntoChapters(tokenizedBook);
+        List<Chapter> analyzedBook = analyzeBook(book, warTerms, peaceTerms);
 
-        // double peaceDensity = calculateDensity(tokenizedBook, peaceTerms);
-        // double warDensity = calculateDensity(tokenizedBook, warTerms);
-
-        // Chapter chapter = new Chapter(1, peaceDensity, warDensity);
-        // System.out.println(chapter);
-
-        // tokenizedBook.forEach(System.out::println);
+        for (int i = 0; i < analyzedBook.size(); i++) {
+            System.out.println("Chapter " + (i + 1) + ": " + analyzedBook.get(i));
+        }
     }
 
     static Optional<String> readFile(String fileName) {
@@ -80,6 +75,14 @@ public class Main {
                 .toList();
     }
 
+    private static List<Chapter> analyzeBook(List<List<String>> book, List<String> warTerms, List<String> peaceTerms) {
+        return book.parallelStream()
+                .map(chapter ->
+                        new Chapter(calculateDensity(chapter, peaceTerms), calculateDensity(chapter, warTerms)))
+                .toList();
+
+    }
+
     private static List<String> filterListByList(List<String> toFilter, List<String> filter) {
         return toFilter.parallelStream()
                 .filter(filter::contains)
@@ -113,9 +116,9 @@ public class Main {
 record Word(String string, int coordinate) {
 }
 
-record Chapter(int number, double peaceDensity, double warDensity) {
+record Chapter(double peaceDensity, double warDensity) {
     @Override
     public String toString() {
-        return "Chapter " + number + ": " + (peaceDensity > warDensity ? "peace" : "war") + "-related";
+        return (peaceDensity > warDensity ? "peace" : "war") + "-related";
     }
 }
