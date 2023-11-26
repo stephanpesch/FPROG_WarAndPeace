@@ -60,6 +60,7 @@ public class Main {
     }
 
     static List<List<String>> readBook(String fileName) {
+        // TODO: Make functional
         Optional<String> bookOptional = readFile(fileName);
         String book = bookOptional.orElse("");
         int indexChapter1 = book.indexOf("CHAPTER 1");
