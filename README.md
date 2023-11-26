@@ -1,10 +1,16 @@
 # War and Peace analyzer
 ## Build instructions
 
-To build make sure that the JDK and make are installed, then just run the following command
+To build make sure that the JDK version >=17 is installed, then just run the following command
 
 ```bash
-make
+./gradlew build -x test
+```
+
+or if gradle is installed
+
+```bash
+gradle build -x test
 ```
 
 ## Run instructions

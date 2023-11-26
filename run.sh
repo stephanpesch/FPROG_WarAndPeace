@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # make
-java -jar out.jar "${1} ${2} ${3}"
+java -jar build/libs/FPROG_WarAndPeace-1.0-SNAPSHOT.jar "${1} ${2} ${3}"
