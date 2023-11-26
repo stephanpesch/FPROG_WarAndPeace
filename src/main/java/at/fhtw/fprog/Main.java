@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -20,54 +21,61 @@ public class Main {
             peaceTermsPath = args[2];
 
         }
-        List<String> book = readFile(bookPath);
-        List<String> warTerms = readFile(warTermsPath);
-        List<String> peaceTerms = readFile(peaceTermsPath);
+        List<List<String>> book = readBook(bookPath);
+        List<String> warTerms = readTerms(warTermsPath);
+        List<String> peaceTerms = readTerms(peaceTermsPath);
 
         if (book.isEmpty() || warTerms.isEmpty() || peaceTerms.isEmpty())
             System.out.println("Could not read files, or files are empty");
 
-        List<String> tokenizedBook = tokenizeBook(book);
-        List<List<String>> splitBook = splitIntoChapters(tokenizedBook);
+        // List<String> tokenizedBook = tokenizeBook(book);
+        // List<List<String>> splitBook = splitIntoChapters(tokenizedBook);
 
-        double peaceDensity = calculateDensity(tokenizedBook, peaceTerms);
-        double warDensity = calculateDensity(tokenizedBook, warTerms);
+        // double peaceDensity = calculateDensity(tokenizedBook, peaceTerms);
+        // double warDensity = calculateDensity(tokenizedBook, warTerms);
 
-        Chapter chapter = new Chapter(1, peaceDensity, warDensity);
-        System.out.println(chapter);
+        // Chapter chapter = new Chapter(1, peaceDensity, warDensity);
+        // System.out.println(chapter);
 
         // tokenizedBook.forEach(System.out::println);
     }
 
-    private static List<String> readFile(String fileName) {
+    static Optional<String> readFile(String fileName) {
+        StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
-            return stream.toList();
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+            return Optional.of(contentBuilder.toString());
         } catch (IOException e) {
-            return List.of();
+            return Optional.empty();
         }
     }
 
-    private static List<List<String>> splitIntoChapters(List<String> words) {
-        int[] chapterCoordinates = filterAndCreateCoordinateArray(words, List.of("chapter"));
-        return IntStream.range(0, chapterCoordinates.length - 1)
-                .mapToObj(i -> words.subList(chapterCoordinates[i], chapterCoordinates[i + 1]))
-                .toList();
+    static List<String> readTerms(String fileName) {
+        Optional<String> termsOptional = readFile(fileName);
+        return List.of(
+                termsOptional
+                        .map(s -> s.split("\\s+"))
+                        .orElseGet(() -> new String[]{})
+        );
     }
 
-    private static List<String> tokenizeBook(List<String> text) {
-        String bookStart = "CHAPTER 1";
-        String bookEnd = "*** END OF THE PROJECT GUTENBERG EBOOK, WAR AND PEACE ***";
+    static List<List<String>> readBook(String fileName) {
+        Optional<String> bookOptional = readFile(fileName);
+        String book = bookOptional.orElse("");
+        int indexChapter1 = book.indexOf("CHAPTER 1");
+        String bookWithoutPreamble = book.substring(indexChapter1);
+        int indexEnd = bookWithoutPreamble.indexOf("*** END OF THE PROJECT GUTENBERG EBOOK, WAR AND PEACE ***");
+        String bookWithoutSuffix = bookWithoutPreamble.substring(0, indexEnd);
 
-
-        return text.parallelStream()
-                .dropWhile(line -> !bookStart.equals(line))
-                .takeWhile(line -> !bookEnd.equals(line))
-                .map(line -> line
-                        .toLowerCase()
-                        .replaceAll("\\p{Punct}+", "")
-                        .split("\\s+"))
-                .flatMap(Arrays::stream)
-                .filter(string -> !string.isEmpty())
+        String[] chapters = bookWithoutSuffix.split("CHAPTER \\d+");
+        return Arrays.stream(chapters)
+                .filter(string -> !"".equals(string))
+                .map(string -> Stream.of(string
+                    .toLowerCase()
+                    .replaceAll("\\p{Punct}+", "")
+                    .split("\\s+"))
+                        .filter(s -> !"".equals(s))
+                        .toList())
                 .toList();
     }
 
@@ -91,20 +99,11 @@ public class Main {
                 .toArray();
     }
 
-    /*
-    private static double calculateDensity(List<String> list, List<String> of) {
-        var distancesArray = filterAndCreateCoordinateArray(list, of);
-        return IntStream.range(0, distancesArray.length - 1)
-                .mapToDouble(i -> distancesArray[i + 1] - distancesArray[i])
-                .average()
-                .orElse(0);
-    }
 
-     */
-    private static double calculateDensity(List<String> list, List<String> of) {
+    static double calculateDensity(List<String> list, List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         return IntStream.range(0, distancesArray.length - 1)
-                .mapToDouble(i -> distancesArray[i + 1] - distancesArray[i])
+                .mapToDouble(i -> distancesArray[i] - distancesArray[0])
                 .average()
                 .orElse(0);
     }
