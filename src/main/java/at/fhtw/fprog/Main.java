@@ -21,23 +21,38 @@ public class Main {
             peaceTermsPath = args[2];
 
         }
+        long readBookStart = System.nanoTime();
         List<List<String>> book = readBook(bookPath);
+        long readBookTime = System.nanoTime() - readBookStart;
+
+        long readWarTermsStart = System.nanoTime();
         List<String> warTerms = readTerms(warTermsPath);
+        long readWarTermsTime = System.nanoTime() - readWarTermsStart;
+
+        long readPeaceTermsStart = System.nanoTime();
         List<String> peaceTerms = readTerms(peaceTermsPath);
+        long readPeaceTermsTime = System.nanoTime() - readPeaceTermsStart;
 
         if (book.isEmpty() || warTerms.isEmpty() || peaceTerms.isEmpty()) {
             System.err.println("Could not read files, or files are empty");
             return;
         }
 
+        long analyzeBookStart = System.nanoTime();
         List<Chapter> analyzedBook = analyzeBook(book, warTerms, peaceTerms);
+        long analyzeBookTime = System.nanoTime() - analyzeBookStart;
 
         for (int i = 0; i < analyzedBook.size(); i++) {
             System.out.println("Chapter " + (i + 1) + ": " + analyzedBook.get(i));
         }
+
+        // System.out.println("Opening and parsing the book took " + readBookTime * 1e-9 + "s");
+        // System.out.println("Opening and parsing the war terms took " + readWarTermsTime * 1e-9 + "s");
+        // System.out.println("Opening and parsing the peace terms took " + readPeaceTermsTime * 1e-9 + "s");
+        // System.out.println("Analyzing the book took " + analyzeBookTime * 1e-9 + "s");
     }
 
-    static Optional<String> readFile(String fileName) {
+    static Optional<String> readFile(final String fileName) {
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
@@ -47,7 +62,7 @@ public class Main {
         }
     }
 
-    static List<String> readTerms(String fileName) {
+    static List<String> readTerms(final String fileName) {
         Optional<String> termsOptional = readFile(fileName);
         return List.of(
                 termsOptional
@@ -56,7 +71,7 @@ public class Main {
         );
     }
 
-    static List<List<String>> readBook(String fileName) {
+    static List<List<String>> readBook(final String fileName) {
         String book = readFile(fileName).orElse("");
         String bookWithoutPreamble = book
                 .substring(book
@@ -78,7 +93,7 @@ public class Main {
                 .toList();
     }
 
-    private static List<Chapter> analyzeBook(List<List<String>> book, List<String> warTerms, List<String> peaceTerms) {
+    static List<Chapter> analyzeBook(final List<List<String>> book, final List<String> warTerms, final List<String> peaceTerms) {
         return book.parallelStream()
                 .map(chapter ->
                         new Chapter(
@@ -90,44 +105,42 @@ public class Main {
 
     }
 
-    private static List<String> filterListByList(List<String> toFilter, List<String> filter) {
+    static List<String> filterListByList(final List<String> toFilter, final List<String> filter) {
         return toFilter.parallelStream()
                 .filter(filter::contains)
                 .toList();
     }
 
-    private static long countOccurrences(List<String> list, List<String> of) {
+    static long countOccurrences(final List<String> list, final List<String> of) {
         return list.parallelStream()
                 .filter(of::contains)
                 .count();
     }
 
-    private static int[] filterAndCreateCoordinateArray(List<String> list, List<String> of) {
-        return IntStream.range(0, list.size()).parallel()
+    static int[] filterAndCreateCoordinateArray(final List<String> list, final List<String> of) {
+        return IntStream.range(0, list.size())
                 .mapToObj(i -> new Word(list.get(i), i))
                 .filter(x -> of.contains(x.string()))
                 .mapToInt(Word::coordinate)
                 .toArray();
     }
 
-    static double calculateDensity(List<String> list, List<String> of) {
-        long termCount = of.stream()
-                .filter(list::contains)
-                .count();
+    static double calculateDensityViktor(final List<String> list, final List<String> of) {
+        long termCount = countOccurrences(list, of);
         long totalDistance = IntStream.range(0, list.size())
                 .filter(i -> of.contains(list.get(i)))
                 .reduce(0, (a, b) -> a + (b - a));
         return termCount == 0 ? 0 : (double) totalDistance / termCount;
     }
 
-    static double calculateDensityTrivial(List<String> list, List<String> of) {
+    static double calculateDensityTrivial(final List<String> list, final List<String> of) {
         long count = list.parallelStream()
                 .filter(of::contains)
                 .count();
         return list.size() / (double) count;
     }
 
-    static double calculateDensityAll(List<String> list, List<String> of) {
+    static double calculateDensity(final List<String> list, final List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         int length = distancesArray.length;
         return IntStream.range(0, length).parallel()
@@ -137,7 +150,7 @@ public class Main {
                 .orElse(0);
     }
 
-    static double calculateDensityFirst(List<String> list, List<String> of) {
+    static double calculateDensityFirst(final List<String> list, final List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         return IntStream.range(0, distancesArray.length).parallel()
                 .mapToDouble(i -> Math.abs(distancesArray[i] - distancesArray[0]))
@@ -145,7 +158,7 @@ public class Main {
                 .orElse(0);
     }
 
-    static double calculateDensityNeighbor(List<String> list, List<String> of) {
+    static double calculateDensityNeighbor(final List<String> list, final List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         return IntStream.range(0, distancesArray.length - 1).parallel()
                 .mapToDouble(i -> distancesArray[i + 1] - distancesArray[i])
@@ -160,6 +173,6 @@ record Word(String string, int coordinate) {
 record Chapter(double peaceDensity, double warDensity) {
     @Override
     public String toString() {
-        return (peaceDensity < warDensity ? "peace" : "war") + "-related";
+        return (peaceDensity <= warDensity ? "peace" : "war") + "-related";
     }
 }
