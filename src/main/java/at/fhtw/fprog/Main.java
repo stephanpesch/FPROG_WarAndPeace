@@ -125,12 +125,12 @@ public class Main {
                 .toArray();
     }
 
-    static double calculateDensityViktor(final List<String> list, final List<String> of) {
+    static double calculateDensity(final List<String> list, final List<String> of) {
         long termCount = countOccurrences(list, of);
         long totalDistance = IntStream.range(0, list.size())
                 .filter(i -> of.contains(list.get(i)))
                 .reduce(0, (a, b) -> a + (b - a));
-        return termCount == 0 ? 0 : (double) totalDistance / termCount;
+        return termCount == 0 ? Double.POSITIVE_INFINITY : (double) totalDistance / termCount;
     }
 
     static double calculateDensityTrivial(final List<String> list, final List<String> of) {
@@ -140,7 +140,7 @@ public class Main {
         return list.size() / (double) count;
     }
 
-    static double calculateDensity(final List<String> list, final List<String> of) {
+    static double calculateDensityAll(final List<String> list, final List<String> of) {
         var distancesArray = filterAndCreateCoordinateArray(list, of);
         int length = distancesArray.length;
         return IntStream.range(0, length).parallel()
