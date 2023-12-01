@@ -3,9 +3,7 @@ package at.fhtw.fprog;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -26,11 +24,11 @@ public class Main {
         long readBookTime = System.nanoTime() - readBookStart;
 
         long readWarTermsStart = System.nanoTime();
-        List<String> warTerms = readTerms(warTermsPath);
+        Set<String> warTerms = readTerms(warTermsPath);
         long readWarTermsTime = System.nanoTime() - readWarTermsStart;
 
         long readPeaceTermsStart = System.nanoTime();
-        List<String> peaceTerms = readTerms(peaceTermsPath);
+        Set<String> peaceTerms = readTerms(peaceTermsPath);
         long readPeaceTermsTime = System.nanoTime() - readPeaceTermsStart;
 
         if (book.isEmpty() || warTerms.isEmpty() || peaceTerms.isEmpty()) {
@@ -42,14 +40,15 @@ public class Main {
         List<Chapter> analyzedBook = analyzeBook(book, warTerms, peaceTerms);
         long analyzeBookTime = System.nanoTime() - analyzeBookStart;
 
-        for (int i = 0; i < analyzedBook.size(); i++) {
-            System.out.println("Chapter " + (i + 1) + ": " + analyzedBook.get(i));
-        }
+        long outputStart = System.nanoTime();
+        IntStream.range(0, analyzedBook.size())
+                .forEach(i -> System.out.println("Chapter " + (i + 1) + ": " + analyzedBook.get(i)));
+        long outputTime = System.nanoTime() - outputStart;
 
-        // System.out.println("Opening and parsing the book took " + readBookTime * 1e-9 + "s");
-        // System.out.println("Opening and parsing the war terms took " + readWarTermsTime * 1e-9 + "s");
-        // System.out.println("Opening and parsing the peace terms took " + readPeaceTermsTime * 1e-9 + "s");
-        // System.out.println("Analyzing the book took " + analyzeBookTime * 1e-9 + "s");
+        System.out.println("Opening and parsing the book took " + readBookTime * 1e-9 + "s");
+        System.out.println("Opening and parsing the war terms took " + readWarTermsTime * 1e-9 + "s");
+        System.out.println("Opening and parsing the peace terms took " + readPeaceTermsTime * 1e-9 + "s");
+        System.out.println("Analyzing the book took " + analyzeBookTime * 1e-9 + "s");
     }
 
     static Optional<String> readFile(final String fileName) {
@@ -62,10 +61,9 @@ public class Main {
         }
     }
 
-    static List<String> readTerms(final String fileName) {
+    static Set<String> readTerms(final String fileName) {
         Optional<String> termsOptional = readFile(fileName);
-        return List.of(
-                termsOptional
+        return Set.of(termsOptional
                         .map(s -> s.split("\\s+"))
                         .orElseGet(() -> new String[]{})
         );
@@ -83,17 +81,17 @@ public class Main {
                 );
         String[] chapters = bookWithoutSuffix.split("CHAPTER \\d+");
         return Arrays.stream(chapters).parallel()
-                .filter(string -> !"".equals(string))
+                .filter(string -> !string.isEmpty())
                 .map(string -> Stream.of(string
-                                .toLowerCase()
                                 .replaceAll("\\p{Punct}+", "")
+                                .toLowerCase()
                                 .split("\\s+"))
                         .filter(s -> !"".equals(s))
                         .toList())
                 .toList();
     }
 
-    static List<Chapter> analyzeBook(final List<List<String>> book, final List<String> warTerms, final List<String> peaceTerms) {
+    static List<Chapter> analyzeBook(final List<List<String>> book, final Set<String> warTerms, final Set<String> peaceTerms) {
         return book.parallelStream()
                 .map(chapter ->
                         new Chapter(
@@ -111,7 +109,7 @@ public class Main {
                 .toList();
     }
 
-    static long countOccurrences(final List<String> list, final List<String> of) {
+    static long countOccurrences(final List<String> list, final Set<String> of) {
         return list.parallelStream()
                 .filter(of::contains)
                 .count();
@@ -125,7 +123,7 @@ public class Main {
                 .toArray();
     }
 
-    static double calculateDensity(final List<String> list, final List<String> of) {
+    static double calculateDensity(final List<String> list, final Set<String> of) {
         long termCount = countOccurrences(list, of);
         long totalDistance = IntStream.range(0, list.size())
                 .filter(i -> of.contains(list.get(i)))
